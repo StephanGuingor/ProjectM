@@ -1,6 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ProjectMPlayerController.h"
+
+#include <functional>
+
 #include "GameFramework/Pawn.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NiagaraSystem.h"
@@ -63,6 +66,35 @@ void AProjectMPlayerController::SetupInputComponent()
 void AProjectMPlayerController::OnInputStarted()
 {
 	StopMovement();
+	// We look for the location in the world where the player has pressed the input
+	FHitResult Hit;
+	bool bHitSuccessful = false;
+	if (bIsTouch)
+	{
+		bHitSuccessful = GetHitResultUnderFinger(ETouchIndex::Touch1, ECollisionChannel::ECC_Visibility, true, Hit);
+	}
+	else
+	{
+		bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
+	}
+
+	// If we hit a surface, cache the location
+	if (bHitSuccessful)
+	{
+		CachedDestination = Hit.Location;
+		
+		if (ClickParticle != nullptr)
+		{
+			FXCursor->GetEmitterHandle(0);
+		}
+		ClickParticle = UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination,
+		                                                               FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f),
+		                                                               true, true, ENCPoolMethod::None, true);
+		
+	}
+	
+	// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
+	
 }
 
 // Triggered every frame when the input is held down
@@ -100,15 +132,17 @@ void AProjectMPlayerController::OnSetDestinationTriggered()
 
 void AProjectMPlayerController::OnSetDestinationReleased()
 {
-	// If it was a short press
-	if (FollowTime <= ShortPressThreshold)
-	{
-		// We move there and spawn some particles
-		UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
-	}
+	// // If it was a short press
+	// if (FollowTime <= ShortPressThreshold)
+	// {
+	// 	// We move there and spawn some particles
+	// 	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
+	// 	
+	// }
+	//
+	// FollowTime = 
 
-	FollowTime = 0.f;
+	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
 }
 
 // Triggered every frame when the input is held down
