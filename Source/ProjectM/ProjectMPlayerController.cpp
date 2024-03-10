@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "ProjectMCharacter.h"
 #include "Engine/World.h"
@@ -14,8 +15,7 @@
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
-
-DEFINE_LOG_CATEGORY(LogTemplateCharacter);
+#include "GameFramework/PawnMovementComponent.h"
 
 AProjectMPlayerController::AProjectMPlayerController()
 {
@@ -63,6 +63,19 @@ void AProjectMPlayerController::SetupInputComponent()
 	}
 }
 
+void AProjectMPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	APawn* ControlledPawn = GetPawn();
+	
+	if (UE::Geometry::Distance(ControlledPawn->GetActorLocation(), CachedDestination) >= 10)
+	{
+		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal() * 300;
+		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
+	}
+}
+
 void AProjectMPlayerController::OnInputStarted()
 {
 	StopMovement();
@@ -85,17 +98,20 @@ void AProjectMPlayerController::OnInputStarted()
 		
 		if (ClickParticle != nullptr)
 		{
-			FXCursor->GetEmitterHandle(0);
+			ClickParticle->DestroyInstance();
+			ClickParticle = nullptr;
 		}
 		ClickParticle = UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination,
 		                                                               FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f),
 		                                                               true, true, ENCPoolMethod::None, true);
-		
 	}
 	
 	// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
 	
 }
+
+
+
 
 // Triggered every frame when the input is held down
 void AProjectMPlayerController::OnSetDestinationTriggered()
@@ -126,7 +142,8 @@ void AProjectMPlayerController::OnSetDestinationTriggered()
 	if (ControlledPawn != nullptr)
 	{
 		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
-		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
+		// ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
+		// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
 	}
 }
 
@@ -140,9 +157,26 @@ void AProjectMPlayerController::OnSetDestinationReleased()
 	// 	
 	// }
 	//
-	// FollowTime = 
+	// FollowTime =
 
-	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
+	FHitResult Hit;
+	bool bHitSuccessful = false;
+	if (bIsTouch)
+	{
+		bHitSuccessful = GetHitResultUnderFinger(ETouchIndex::Touch1, ECollisionChannel::ECC_Visibility, true, Hit);
+	}
+	else
+	{
+		bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
+	}
+	
+	// If we hit a surface, cache the location
+	if (bHitSuccessful)
+	{
+		CachedDestination = Hit.Location;
+	}
+	//
+	// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
 }
 
 // Triggered every frame when the input is held down

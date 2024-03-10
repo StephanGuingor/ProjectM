@@ -25,6 +25,8 @@ class AProjectMPlayerController : public APlayerController
 public:
 	AProjectMPlayerController();
 
+	virtual void Tick(float DeltaSeconds) override;
+
 	/** Time Threshold to know if it was a short press */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	float ShortPressThreshold;
