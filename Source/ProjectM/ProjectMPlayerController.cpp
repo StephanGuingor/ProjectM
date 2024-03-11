@@ -15,7 +15,11 @@
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Math/Vector.h"
+
+DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AProjectMPlayerController::AProjectMPlayerController()
 {
@@ -68,10 +72,30 @@ void AProjectMPlayerController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	APawn* ControlledPawn = GetPawn();
+
+	if (ControlledPawn == nullptr)
+	{
+		return;
+	}
 	
-	if (UE::Geometry::Distance(ControlledPawn->GetActorLocation(), CachedDestination) >= 10)
+	if (UE::Geometry::Distance(ControlledPawn->GetActorLocation(), CachedDestination) >= 110)
 	{
 		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal() * 300;
+		
+		FVector CurrentDirection = ControlledPawn->GetActorForwardVector().GetSafeNormal();
+		FVector CachedDestinationNormal = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
+
+		float angle = FVector::DotProduct(CurrentDirection, CachedDestinationNormal);
+
+		if (angle > 0.5)
+		{
+			GetCharacter()->GetCharacterMovement()->RotationRate = FRotator(0.f, 600.f, 0.f);
+		}
+		else
+		{
+			GetCharacter()->GetCharacterMovement()->RotationRate = FRotator(0.f, 1500.f, 0.f);
+		}
+		
 		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
 	}
 }
@@ -96,7 +120,7 @@ void AProjectMPlayerController::OnInputStarted()
 	{
 		CachedDestination = Hit.Location;
 		
-		if (ClickParticle != nullptr)
+		if (ClickParticle != nullptr && ClickParticle->IsActive())
 		{
 			ClickParticle->DestroyInstance();
 			ClickParticle = nullptr;
