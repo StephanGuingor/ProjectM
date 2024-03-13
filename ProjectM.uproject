@@ -7,7 +7,11 @@
 		{
 			"Name": "ProjectM",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"GameplayAbilities"
+			]
 		}
 	],
 	"Plugins": [
@@ -20,6 +24,10 @@
 		},
 		{
 			"Name": "Water",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayAbilities",
 			"Enabled": true
 		}
 	]
