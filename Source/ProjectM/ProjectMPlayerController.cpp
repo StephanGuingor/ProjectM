@@ -1,9 +1,13 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ProjectMPlayerController.h"
+
+#include <functional>
+
 #include "GameFramework/Pawn.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "ProjectMCharacter.h"
 #include "Engine/World.h"
@@ -11,6 +15,9 @@
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
+#include "Math/Vector.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -60,10 +67,75 @@ void AProjectMPlayerController::SetupInputComponent()
 	}
 }
 
+void AProjectMPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	APawn* ControlledPawn = GetPawn();
+
+	if (ControlledPawn == nullptr)
+	{
+		return;
+	}
+	
+	if (UE::Geometry::Distance(ControlledPawn->GetActorLocation(), CachedDestination) >= 110)
+	{
+		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal() * 300;
+		
+		FVector CurrentDirection = ControlledPawn->GetActorForwardVector().GetSafeNormal();
+		FVector CachedDestinationNormal = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
+
+		float angle = FVector::DotProduct(CurrentDirection, CachedDestinationNormal);
+
+		if (angle > 0.5)
+		{
+			GetCharacter()->GetCharacterMovement()->RotationRate = FRotator(0.f, 600.f, 0.f);
+		}
+		else
+		{
+			GetCharacter()->GetCharacterMovement()->RotationRate = FRotator(0.f, 1500.f, 0.f);
+		}
+		
+		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
+	}
+}
+
 void AProjectMPlayerController::OnInputStarted()
 {
 	StopMovement();
+	// We look for the location in the world where the player has pressed the input
+	FHitResult Hit;
+	bool bHitSuccessful = false;
+	if (bIsTouch)
+	{
+		bHitSuccessful = GetHitResultUnderFinger(ETouchIndex::Touch1, ECollisionChannel::ECC_Visibility, true, Hit);
+	}
+	else
+	{
+		bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
+	}
+
+	// If we hit a surface, cache the location
+	if (bHitSuccessful)
+	{
+		CachedDestination = Hit.Location;
+		
+		if (ClickParticle != nullptr && ClickParticle->IsActive())
+		{
+			ClickParticle->DestroyInstance();
+			ClickParticle = nullptr;
+		}
+		ClickParticle = UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination,
+		                                                               FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f),
+		                                                               true, true, ENCPoolMethod::None, true);
+	}
+	
+	// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
+	
 }
+
+
+
 
 // Triggered every frame when the input is held down
 void AProjectMPlayerController::OnSetDestinationTriggered()
@@ -94,21 +166,41 @@ void AProjectMPlayerController::OnSetDestinationTriggered()
 	if (ControlledPawn != nullptr)
 	{
 		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
-		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
+		// ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
+		// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
 	}
 }
 
 void AProjectMPlayerController::OnSetDestinationReleased()
 {
-	// If it was a short press
-	if (FollowTime <= ShortPressThreshold)
-	{
-		// We move there and spawn some particles
-		UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
-	}
+	// // If it was a short press
+	// if (FollowTime <= ShortPressThreshold)
+	// {
+	// 	// We move there and spawn some particles
+	// 	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
+	// 	
+	// }
+	//
+	// FollowTime =
 
-	FollowTime = 0.f;
+	FHitResult Hit;
+	bool bHitSuccessful = false;
+	if (bIsTouch)
+	{
+		bHitSuccessful = GetHitResultUnderFinger(ETouchIndex::Touch1, ECollisionChannel::ECC_Visibility, true, Hit);
+	}
+	else
+	{
+		bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
+	}
+	
+	// If we hit a surface, cache the location
+	if (bHitSuccessful)
+	{
+		CachedDestination = Hit.Location;
+	}
+	//
+	// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
 }
 
 // Triggered every frame when the input is held down

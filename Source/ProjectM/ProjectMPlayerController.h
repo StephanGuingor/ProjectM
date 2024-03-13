@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NiagaraComponentPool.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Templates/SubclassOf.h"
 #include "GameFramework/PlayerController.h"
 #include "ProjectMPlayerController.generated.h"
@@ -21,6 +24,8 @@ class AProjectMPlayerController : public APlayerController
 
 public:
 	AProjectMPlayerController();
+
+	virtual void Tick(float DeltaSeconds) override;
 
 	/** Time Threshold to know if it was a short press */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
@@ -49,7 +54,7 @@ protected:
 	virtual void SetupInputComponent() override;
 	
 	// To add mapping context
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 
 	/** Input handlers for SetDestination action. */
 	void OnInputStarted();
@@ -60,6 +65,7 @@ protected:
 
 private:
 	FVector CachedDestination;
+	UNiagaraComponent* ClickParticle;
 
 	bool bIsTouch; // Is it a touch device
 	float FollowTime; // For how long it has been pressed
