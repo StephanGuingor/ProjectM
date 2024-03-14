@@ -13,7 +13,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Materials/Material.h"
 #include "Engine/World.h"
+#include "Player/ProjectMPlayerController.h"
 #include "Player/ProjectMPlayerState.h"
+#include "ProjectM/UI/HUD/ProjectMHUD.h"
 
 AProjectMCharacter::AProjectMCharacter()
 {
@@ -65,7 +67,15 @@ void AProjectMCharacter::PossessedBy(AController* NewController)
 		APlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(APlayerState, this);
 		AbilitySystemComponent = APlayerState->GetAbilitySystemComponent();
 		AttributeSet = APlayerState->GetAttributeSet();
-
+		
+		if(AProjectMPlayerController* ProjectMPlayerController = Cast<AProjectMPlayerController>(GetController()))
+		{
+			if (AProjectMHUD* ProjectMHUD = Cast<AProjectMHUD>(ProjectMPlayerController->GetHUD()))
+			{
+				ProjectMHUD->InitOverlay(ProjectMPlayerController, APlayerState, AbilitySystemComponent, AttributeSet);
+			}
+		}	
+		
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PossessedBy"));
 	}
 }

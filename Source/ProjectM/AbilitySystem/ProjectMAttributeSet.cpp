@@ -6,9 +6,9 @@
 
 UProjectMAttributeSet::UProjectMAttributeSet()
 {
-	InitHealth(600.0f);
+	InitHealth(300.0f);
 	InitMaxHealth(600.0f);
-	InitMana(300.0f);
+	InitMana(200.0f);
 	InitMaxMana(300.0f);
 	InitAttackPower(50.0f);
 	InitAttackSpeed(0.6f);
