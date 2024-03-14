@@ -11,11 +11,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangedSignature, float, Ne
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxHealthChangedSignature, float, NewMaxHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnManaChangedSignature, float, NewMana);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxManaChangedSignature, float, NewMaxMana);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttackPowerChangedSignature, float, NewAttackPower);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDefenseChangedSignature, float, NewDefense);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttackDamageChangedSignature, float, NewAttackDamage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbilityPowerChangedSignature, float, NewAbilityPower);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnArmorChangedSignature, float, NewArmor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMagicResistChangedSignature, float, NewMagicResist);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMovementSpeedChangedSignature, float, NewMoveSpeed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttackSpeedChangedSignature, float, NewCastAttackSpeed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCriticalChanceChangedSignature, float, NewCriticalChance);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCriticalDamageChangedSignature, float, NewCriticalDamage);
 
 /**
  * 
@@ -41,10 +44,16 @@ public:
 	FOnMaxManaChangedSignature OnMaxManaChanged;
 
 	UPROPERTY(BlueprintAssignable, Category="GAS|Attributes")
-	FOnAttackPowerChangedSignature OnAttackPowerChanged;
+	FOnAttackDamageChangedSignature OnAttackDamageChanged;
 
 	UPROPERTY(BlueprintAssignable, Category="GAS|Attributes")
-	FOnDefenseChangedSignature OnDefenseChanged;
+	FOnAbilityPowerChangedSignature OnAbilityPowerChanged;
+
+	UPROPERTY(BlueprintAssignable, Category="GAS|Attributes")
+	FOnArmorChangedSignature OnArmorChanged;
+
+	UPROPERTY(BlueprintAssignable, Category="GAS|Attributes")
+	FOnMagicResistChangedSignature OnMagicResistChanged;
 
 	UPROPERTY(BlueprintAssignable, Category="GAS|Attributes")
 	FOnMovementSpeedChangedSignature OnMovementSpeedChanged;
@@ -55,14 +64,20 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="GAS|Attributes")
 	FOnCriticalChanceChangedSignature OnCriticalChanceChanged;
 
+	UPROPERTY(BlueprintAssignable, Category="GAS|Attributes")
+	FOnCriticalDamageChangedSignature OnCriticalDamageChanged;
+
 protected:
 	void HealthChanged(const FOnAttributeChangeData& Data) const;
 	void MaxHealthChanged(const FOnAttributeChangeData& Data) const;
 	void ManaChanged(const FOnAttributeChangeData& Data) const;
 	void MaxManaChanged(const FOnAttributeChangeData& Data) const;
-	void AttackPowerChanged(const FOnAttributeChangeData& Data) const;
-	void DefenseChanged(const FOnAttributeChangeData& Data) const;
+	void AttackDamageChanged(const FOnAttributeChangeData& Data) const;
+	void AbilityPowerChanged(const FOnAttributeChangeData& Data) const;
+	void ArmorChanged(const FOnAttributeChangeData& Data) const;
+	void MagicResistChanged(const FOnAttributeChangeData& Data) const;
 	void MovementSpeedChanged(const FOnAttributeChangeData& Data) const;
 	void AttackSpeedChanged(const FOnAttributeChangeData& Data) const;
 	void CriticalChanceChanged(const FOnAttributeChangeData& Data) const;
+	void CriticalDamageChanged(const FOnAttributeChangeData& Data) const;
 };

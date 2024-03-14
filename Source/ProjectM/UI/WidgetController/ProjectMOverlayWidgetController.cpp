@@ -12,11 +12,14 @@ void UProjectMOverlayWidgetController::BroadcastInitialValues()
 		OnMaxHealthChanged.Broadcast(ProjectMAttributeSet->GetMaxHealth());
 		OnManaChanged.Broadcast(ProjectMAttributeSet->GetMana());
 		OnMaxManaChanged.Broadcast(ProjectMAttributeSet->GetMaxMana());
-		OnAttackPowerChanged.Broadcast(ProjectMAttributeSet->GetAttackPower());
-		OnDefenseChanged.Broadcast(ProjectMAttributeSet->GetDefense());
+		OnAttackDamageChanged.Broadcast(ProjectMAttributeSet->GetAttackDamage());
+		OnAbilityPowerChanged.Broadcast(ProjectMAttributeSet->GetAbilityPower());
+		OnArmorChanged.Broadcast(ProjectMAttributeSet->GetArmor());
+		OnMagicResistChanged.Broadcast(ProjectMAttributeSet->GetMagicResist());
 		OnMovementSpeedChanged.Broadcast(ProjectMAttributeSet->GetMovementSpeed());
 		OnAttackSpeedChanged.Broadcast(ProjectMAttributeSet->GetAttackSpeed());
 		OnCriticalChanceChanged.Broadcast(ProjectMAttributeSet->GetCriticalChance());
+		OnCriticalDamageChanged.Broadcast(ProjectMAttributeSet->GetCriticalDamage());
 	}
 }
 
@@ -30,11 +33,14 @@ void UProjectMOverlayWidgetController::BindCallbacksToDependencies()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetMaxHealthAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::MaxHealthChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetManaAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::ManaChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetMaxManaAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::MaxManaChanged);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetAttackPowerAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::AttackPowerChanged);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetDefenseAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::DefenseChanged);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetAttackDamageAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::AttackDamageChanged);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetAbilityPowerAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::AbilityPowerChanged);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetArmorAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::ArmorChanged);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetMagicResistAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::MagicResistChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetMovementSpeedAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::MovementSpeedChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetAttackSpeedAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::AttackSpeedChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetCriticalChanceAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::CriticalChanceChanged);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetCriticalDamageAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::CriticalDamageChanged);
 }
 
 void UProjectMOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data) const
@@ -57,14 +63,24 @@ void UProjectMOverlayWidgetController::MaxManaChanged(const FOnAttributeChangeDa
 	OnMaxManaChanged.Broadcast(Data.NewValue);
 }
 
-void UProjectMOverlayWidgetController::AttackPowerChanged(const FOnAttributeChangeData& Data) const
+void UProjectMOverlayWidgetController::AttackDamageChanged(const FOnAttributeChangeData& Data) const
 {
-	OnAttackPowerChanged.Broadcast(Data.NewValue);
+	OnAttackDamageChanged.Broadcast(Data.NewValue);
 }
 
-void UProjectMOverlayWidgetController::DefenseChanged(const FOnAttributeChangeData& Data) const
+void UProjectMOverlayWidgetController::AbilityPowerChanged(const FOnAttributeChangeData& Data) const
 {
-	OnDefenseChanged.Broadcast(Data.NewValue);
+	OnAbilityPowerChanged.Broadcast(Data.NewValue);
+}
+
+void UProjectMOverlayWidgetController::ArmorChanged(const FOnAttributeChangeData& Data) const
+{
+	OnArmorChanged.Broadcast(Data.NewValue);
+}
+
+void UProjectMOverlayWidgetController::MagicResistChanged(const FOnAttributeChangeData& Data) const
+{
+	OnMagicResistChanged.Broadcast(Data.NewValue);
 }
 
 void UProjectMOverlayWidgetController::MovementSpeedChanged(const FOnAttributeChangeData& Data) const
@@ -80,4 +96,9 @@ void UProjectMOverlayWidgetController::AttackSpeedChanged(const FOnAttributeChan
 void UProjectMOverlayWidgetController::CriticalChanceChanged(const FOnAttributeChangeData& Data) const
 {
 	OnCriticalChanceChanged.Broadcast(Data.NewValue);
+}
+
+void UProjectMOverlayWidgetController::CriticalDamageChanged(const FOnAttributeChangeData& Data) const
+{
+	OnCriticalDamageChanged.Broadcast(Data.NewValue);
 }

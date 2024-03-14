@@ -55,12 +55,19 @@ public:
 	UFUNCTION()
 	void OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const;
 	
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_AttackPower, Category = "Power")
-	FGameplayAttributeData AttackPower;
-	ATTRIBUTE_ACCESSORS(UProjectMAttributeSet, AttackPower);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_AttackDamage, Category = "Power")
+	FGameplayAttributeData AttackDamage;
+	ATTRIBUTE_ACCESSORS(UProjectMAttributeSet, AttackDamage);
 
 	UFUNCTION()
-	void OnRep_AttackPower(const FGameplayAttributeData& OldAttackPower) const;
+	void OnRep_AttackDamage(const FGameplayAttributeData& OldAttackDamage) const;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_AbilityPower, Category = "Power")
+	FGameplayAttributeData AbilityPower;
+	ATTRIBUTE_ACCESSORS(UProjectMAttributeSet, AbilityPower);
+
+	UFUNCTION()
+	void OnRep_AbilityPower(const FGameplayAttributeData& OldAbilityPower) const;
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_AttackSpeed, Category = "Power")
 	FGameplayAttributeData AttackSpeed;
@@ -83,10 +90,24 @@ public:
 	UFUNCTION()
 	void OnRep_CriticalChance(const FGameplayAttributeData& OldCriticalChance) const;
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Defense, Category = "Defense")
-	FGameplayAttributeData Defense;
-	ATTRIBUTE_ACCESSORS(UProjectMAttributeSet, Defense);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CriticalDamage, Category = "Power")
+	FGameplayAttributeData CriticalDamage;
+	ATTRIBUTE_ACCESSORS(UProjectMAttributeSet, CriticalDamage);
 
 	UFUNCTION()
-	void OnRep_Defense(const FGameplayAttributeData& OldDefense) const;
+	void OnRep_CriticalDamage(const FGameplayAttributeData& OldCriticalDamage) const;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Armor, Category = "Defense")
+	FGameplayAttributeData Armor;
+	ATTRIBUTE_ACCESSORS(UProjectMAttributeSet, Armor);
+
+	UFUNCTION()
+	void OnRep_Armor(const FGameplayAttributeData& OldArmor) const;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MagicResist, Category = "Defense")
+	FGameplayAttributeData MagicResist;
+	ATTRIBUTE_ACCESSORS(UProjectMAttributeSet, MagicResist);
+
+	UFUNCTION()
+	void OnRep_MagicResist(const FGameplayAttributeData& OldMagicResist) const;
 };
