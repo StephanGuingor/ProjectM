@@ -2,6 +2,8 @@
 
 
 #include "ProjectMPlayerState.h"
+
+#include "Net/UnrealNetwork.h"
 #include "ProjectM/AbilitySystem/ProjectMAttributeSet.h"
 #include "ProjectM/AbilitySystem/ProjectMAbilitySystemComponent.h"
 
@@ -14,4 +16,16 @@ AProjectMPlayerState::AProjectMPlayerState()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 	
 	AttributeSet = CreateDefaultSubobject<UProjectMAttributeSet>("AttributeSet");
+}
+
+void AProjectMPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AProjectMPlayerState, Level);
+}
+
+void AProjectMPlayerState::OnRep_Level(int32 OldLevel)
+{
+	
 }

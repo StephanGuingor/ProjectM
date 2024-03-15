@@ -9,7 +9,7 @@
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "ProjectM/ProjectMCharacter.h"
+#include "ProjectM/Champion/ProjectMCharacter.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
@@ -130,8 +130,7 @@ void AProjectMPlayerController::OnInputStarted()
 		                                                               true, true, ENCPoolMethod::None, true);
 	}
 	
-	// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-	
+	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
 }
 
 

@@ -6,10 +6,11 @@
 #include "AbilitySystemComponent.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "Interaction/CombatInterface.h"
 #include "ProjectMCharacterBase.generated.h"
 
 UCLASS(Abstract)
-class PROJECTM_API AProjectMCharacterBase : public ACharacter, public IAbilitySystemInterface
+class PROJECTM_API AProjectMCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
 {
 	GENERATED_BODY()
 
@@ -28,4 +29,10 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
+	TSubclassOf<UGameplayEffect> DefaultPrimaryAttributeSet;
+
+	UFUNCTION()
+	void InitializePrimaryAttributes() const;
 };

@@ -2,7 +2,7 @@
 
 #include "ProjectMGameMode.h"
 #include "ProjectM/Player/ProjectMPlayerController.h"
-#include "ProjectMCharacter.h"
+#include "Champion/ProjectMCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 AProjectMGameMode::AProjectMGameMode()

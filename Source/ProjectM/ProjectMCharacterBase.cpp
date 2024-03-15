@@ -13,6 +13,17 @@ void AProjectMCharacterBase::BeginPlay()
 	Super::BeginPlay();
 }
 
+void AProjectMCharacterBase::InitializePrimaryAttributes() const
+{
+	check(IsValid(GetAbilitySystemComponent()));
+	check(DefaultPrimaryAttributeSet);
+	
+	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(this);
+	const FGameplayEffectSpecHandle SpecHandle =  GetAbilitySystemComponent()->MakeOutgoingSpec(DefaultPrimaryAttributeSet, 1.f, EffectContextHandle);
+	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
+}
+
 AProjectMCharacterBase::AProjectMCharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = true;

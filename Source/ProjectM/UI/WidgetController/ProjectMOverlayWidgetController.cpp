@@ -2,6 +2,8 @@
 
 
 #include "ProjectMOverlayWidgetController.h"
+
+#include "ProjectM/AbilitySystem/ProjectMAbilitySystemComponent.h"
 #include "ProjectM/AbilitySystem/ProjectMAttributeSet.h"
 
 void UProjectMOverlayWidgetController::BroadcastInitialValues()
@@ -41,6 +43,8 @@ void UProjectMOverlayWidgetController::BindCallbacksToDependencies()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetAttackSpeedAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::AttackSpeedChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetCriticalChanceAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::CriticalChanceChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(ProjectMAttributeSet->GetCriticalDamageAttribute()).AddUObject(this, &UProjectMOverlayWidgetController::CriticalDamageChanged);
+
+	Cast<UProjectMAbilitySystemComponent>(AbilitySystemComponent)->OnEffectAssetTags.AddUObject(this, &UProjectMOverlayWidgetController::OnEffectAssetTagsApplied);
 }
 
 void UProjectMOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data) const
@@ -101,4 +105,12 @@ void UProjectMOverlayWidgetController::CriticalChanceChanged(const FOnAttributeC
 void UProjectMOverlayWidgetController::CriticalDamageChanged(const FOnAttributeChangeData& Data) const
 {
 	OnCriticalDamageChanged.Broadcast(Data.NewValue);
+}
+
+void UProjectMOverlayWidgetController::OnEffectAssetTagsApplied(const FGameplayTagContainer& Tags) const
+{
+	for (const FGameplayTag& Tag : Tags)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 9.f, FColor::Blue, Tag.ToString());
+	}
 }
