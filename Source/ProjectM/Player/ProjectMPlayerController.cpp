@@ -87,13 +87,16 @@ void AProjectMPlayerController::Tick(float DeltaSeconds)
 
 		float angle = FVector::DotProduct(CurrentDirection, CachedDestinationNormal);
 
+		ACharacter* character = GetCharacter();
+		UCharacterMovementComponent* characterMovement = character->GetCharacterMovement();
+		
 		if (angle > 0.5)
 		{
-			GetCharacter()->GetCharacterMovement()->RotationRate = FRotator(0.f, 600.f, 0.f);
+			characterMovement->RotationRate = FRotator(0.f, 600.f, 0.f);
 		}
 		else
 		{
-			GetCharacter()->GetCharacterMovement()->RotationRate = FRotator(0.f, 1500.f, 0.f);
+			characterMovement->RotationRate = FRotator(0.f, 1500.f, 0.f);
 		}
 		
 		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);

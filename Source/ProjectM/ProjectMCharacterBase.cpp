@@ -28,3 +28,4 @@ AProjectMCharacterBase::AProjectMCharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
+
