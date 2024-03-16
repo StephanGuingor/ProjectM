@@ -50,6 +50,7 @@ void AProjectMPlayerController::SetupInputComponent()
 	// Set up action bindings
 	if (UProjectMInputComponent* EnhancedInputComponent = CastChecked<UProjectMInputComponent>(InputComponent))
 	{
+		check(InputConfig);
 		EnhancedInputComponent->BindAbilityActions(InputConfig, this, &AProjectMPlayerController::AbilityInputTagPressed, &AProjectMPlayerController::AbilityInputTagReleased, &AProjectMPlayerController::AbilityInputTagHeld);
 		// Setup mouse input events
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &AProjectMPlayerController::OnInputStarted);
