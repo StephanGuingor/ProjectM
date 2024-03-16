@@ -7,7 +7,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/Character.h"
 
-#include "ProjectM/ProjectMCharacterBase.h"
+#include "ProjectM/Champion/ProjectMCharacterBase.h"
 #include "ProjectMCharacter.generated.h"
 
 UCLASS(Blueprintable)

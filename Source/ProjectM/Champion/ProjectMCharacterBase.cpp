@@ -3,6 +3,8 @@
 
 #include "ProjectMCharacterBase.h"
 
+#include "ProjectM/AbilitySystem/ProjectMAbilitySystemComponent.h"
+
 UAbilitySystemComponent* AProjectMCharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
@@ -22,6 +24,14 @@ void AProjectMCharacterBase::InitializePrimaryAttributes() const
 	EffectContextHandle.AddSourceObject(this);
 	const FGameplayEffectSpecHandle SpecHandle =  GetAbilitySystemComponent()->MakeOutgoingSpec(DefaultPrimaryAttributeSet, 1.f, EffectContextHandle);
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
+}
+
+void AProjectMCharacterBase::AddCharacterAbilities()
+{
+	UProjectMAbilitySystemComponent* AbilitySystem = CastChecked<UProjectMAbilitySystemComponent>(AbilitySystemComponent);
+	if (!HasAuthority()) return;
+
+	AbilitySystem->AddCharacterAbilities(StartupAbilities);	
 }
 
 AProjectMCharacterBase::AProjectMCharacterBase()

@@ -6,7 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
-#include "Interaction/CombatInterface.h"
+#include "ProjectM/Interaction/CombatInterface.h"
 #include "ProjectMCharacterBase.generated.h"
 
 UCLASS(Abstract)
@@ -36,4 +36,12 @@ protected:
 
 	UFUNCTION()
 	void InitializePrimaryAttributes() const;
+
+	void AddCharacterAbilities();
+	
+private:
+	UPROPERTY(EditAnywhere, Category="Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 };
+
+

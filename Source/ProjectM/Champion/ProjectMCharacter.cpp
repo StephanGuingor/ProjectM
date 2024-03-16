@@ -78,7 +78,7 @@ void AProjectMCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	InitAbilityActorInfo();
-
+	AddCharacterAbilities();
 	InitializeFloatingStatusBar();
 }
 
