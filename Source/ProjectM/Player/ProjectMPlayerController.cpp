@@ -28,6 +28,11 @@ AProjectMPlayerController::AProjectMPlayerController()
 	DefaultMouseCursor = EMouseCursor::Default;
 	CachedDestination = FVector::ZeroVector;
 	FollowTime = 0.f;
+
+	// load the input config
+	static ConstructorHelpers::FObjectFinder<UProjectMInputConfig> InputConfigAsset(TEXT("/Game/Input/DA_TEST.DA_TEST"));
+	InputConfig = InputConfigAsset.Object;
+	
 }
 
 void AProjectMPlayerController::BeginPlay()
@@ -41,15 +46,17 @@ void AProjectMPlayerController::BeginPlay()
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
 }
-
 void AProjectMPlayerController::SetupInputComponent()
 {
 	// set up gameplay key bindings
 	Super::SetupInputComponent();
-
+	
 	// Set up action bindings
 	if (UProjectMInputComponent* EnhancedInputComponent = CastChecked<UProjectMInputComponent>(InputComponent))
 	{
+		
+		check(InputConfig);
+		
 		EnhancedInputComponent->BindAbilityActions(InputConfig, this, &AProjectMPlayerController::AbilityInputTagPressed, &AProjectMPlayerController::AbilityInputTagReleased, &AProjectMPlayerController::AbilityInputTagHeld);
 		// Setup mouse input events
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &AProjectMPlayerController::OnInputStarted);
