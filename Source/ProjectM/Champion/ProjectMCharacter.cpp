@@ -15,7 +15,10 @@
 #include "Engine/World.h"
 #include "ProjectM/Player/ProjectMPlayerController.h"
 #include "ProjectM/Player/ProjectMPlayerState.h"
+#include "ProjectM/UI/Widget/ProjectMUserWidget.h"
 #include "ProjectM/UI/HUD/ProjectMHUD.h"
+#include "ProjectM/UI/WidgetController/ProjectMWidgetController.h"
+#include "ProjectM/UI/WidgetController/ProjectMOverlayWidgetController.h"
 
 AProjectMCharacter::AProjectMCharacter()
 {
@@ -46,6 +49,16 @@ AProjectMCharacter::AProjectMCharacter()
 	TopDownCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	TopDownCameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	// Create health bar widget
+	HealthBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarWidget"));
+	HealthBarWidgetComponent->SetupAttachment(RootComponent);
+
+	HealthBarWidgetComponent->SetWidgetClass(HealthBarWidgetClass);
+	HealthBarWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	HealthBarWidgetComponent->SetDrawSize(FVector2D(100, 25));
+	HealthBarWidgetComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
+	HealthBarWidgetComponent->SetVisibility(true);
+
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -75,6 +88,29 @@ int32 AProjectMCharacter::GetPlayerLevel()
 	const AProjectMPlayerState* APlayerState = GetPlayerState<AProjectMPlayerState>();
 	checkf(APlayerState, TEXT("APlayerState is null"));
 	return APlayerState->GetPlayerLevel();
+}
+
+void AProjectMCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// if not server
+	
+	check(IsValid(HealthBarWidgetComponent->GetWidget()));
+
+	 UUserWidget* Widget = HealthBarWidgetComponent->GetWidget();
+	UProjectMUserWidget* ProjectMUserWidget = Cast<UProjectMUserWidget>(Widget);
+
+	AProjectMPlayerController* ProjectMPlayerController = Cast<AProjectMPlayerController>(GetController());
+	if (ProjectMPlayerController == nullptr) {
+		return;
+	}
+	
+	if (AProjectMHUD* ProjectMHUD = Cast<AProjectMHUD>(ProjectMPlayerController->GetHUD())) {
+		UProjectMOverlayWidgetController* WidgetController = ProjectMHUD->GetOverlayWidgetController(FWidgetControllerParams(ProjectMPlayerController, GetPlayerState(), AbilitySystemComponent, AttributeSet));
+		ProjectMUserWidget->SetWidgetController(WidgetController);
+		WidgetController->BroadcastInitialValues();
+	}
 }
 
 void AProjectMCharacter::InitAbilityActorInfo()

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/Character.h"
 
 #include "ProjectM/ProjectMCharacterBase.h"
@@ -28,6 +29,11 @@ public:
 	virtual void OnRep_PlayerState() override;
 
 	virtual int32 GetPlayerLevel() override;
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<class UUserWidget> HealthBarWidgetClass;
+
+	void BeginPlay() override;
 private:
 	/** Top down camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -36,6 +42,10 @@ private:
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
+
+	/* Healthbar Widget */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* HealthBarWidgetComponent;
 
 	void InitAbilityActorInfo();
 };
