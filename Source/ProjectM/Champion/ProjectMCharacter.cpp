@@ -13,10 +13,13 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Materials/Material.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "ProjectM/Player/ProjectMPlayerController.h"
 #include "ProjectM/Player/ProjectMPlayerState.h"
 #include "ProjectM/UI/Widget/ProjectMUserWidget.h"
 #include "ProjectM/UI/HUD/ProjectMHUD.h"
+#include "ProjectM/UI/Widget/ProjectMFloatingStatusBar.h"
+#include "ProjectM/AbilitySystem/ProjectMAttributeSet.h"
 #include "ProjectM/UI/WidgetController/ProjectMWidgetController.h"
 #include "ProjectM/UI/WidgetController/ProjectMOverlayWidgetController.h"
 
@@ -49,15 +52,17 @@ AProjectMCharacter::AProjectMCharacter()
 	TopDownCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	TopDownCameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	// Create health bar widget
-	HealthBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarWidget"));
-	HealthBarWidgetComponent->SetupAttachment(RootComponent);
+	UIFloatingStatusBarComponent = CreateDefaultSubobject<UWidgetComponent>(FName("UIFloatingStatusBarComponent"));
+	UIFloatingStatusBarComponent->SetupAttachment(RootComponent);
+	UIFloatingStatusBarComponent->SetRelativeLocation(FVector(0, 0, 120));
+	UIFloatingStatusBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	UIFloatingStatusBarComponent->SetDrawSize(FVector2D(500, 500));
 
-	HealthBarWidgetComponent->SetWidgetClass(HealthBarWidgetClass);
-	HealthBarWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	HealthBarWidgetComponent->SetDrawSize(FVector2D(100, 25));
-	HealthBarWidgetComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
-	HealthBarWidgetComponent->SetVisibility(true);
+	// UIFloatingStatusBarClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("/Game/GASShooter/UI/UI_FloatingStatusBar_Hero.UI_FloatingStatusBar_Hero_C"));
+	// if (!UIFloatingStatusBarClass)
+	// {
+	// 	UE_LOG(LogTemp, Error, TEXT("%s() Failed to find UIFloatingStatusBarClass. If it was moved, please update the reference location in C++."), *FString(__FUNCTION__));
+	// }
 
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
@@ -72,8 +77,9 @@ void AProjectMCharacter::Tick(float DeltaSeconds)
 void AProjectMCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-
 	InitAbilityActorInfo();
+
+	InitializeFloatingStatusBar();
 }
 
 void AProjectMCharacter::OnRep_PlayerState()
@@ -81,6 +87,8 @@ void AProjectMCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	InitAbilityActorInfo();
+
+	InitializeFloatingStatusBar();
 }
 
 int32 AProjectMCharacter::GetPlayerLevel()
@@ -94,23 +102,18 @@ void AProjectMCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// if not server
-	
-	check(IsValid(HealthBarWidgetComponent->GetWidget()));
-
-	 UUserWidget* Widget = HealthBarWidgetComponent->GetWidget();
-	UProjectMUserWidget* ProjectMUserWidget = Cast<UProjectMUserWidget>(Widget);
+	// check if is server authority
+	if (!HasAuthority())
+	{
+		return;
+	}
 
 	AProjectMPlayerController* ProjectMPlayerController = Cast<AProjectMPlayerController>(GetController());
 	if (ProjectMPlayerController == nullptr) {
 		return;
 	}
-	
-	if (AProjectMHUD* ProjectMHUD = Cast<AProjectMHUD>(ProjectMPlayerController->GetHUD())) {
-		UProjectMOverlayWidgetController* WidgetController = ProjectMHUD->GetOverlayWidgetController(FWidgetControllerParams(ProjectMPlayerController, GetPlayerState(), AbilitySystemComponent, AttributeSet));
-		ProjectMUserWidget->SetWidgetController(WidgetController);
-		WidgetController->BroadcastInitialValues();
-	}
+
+	InitializeFloatingStatusBar();
 }
 
 void AProjectMCharacter::InitAbilityActorInfo()
@@ -135,4 +138,44 @@ void AProjectMCharacter::InitAbilityActorInfo()
 	}
 
 	InitializePrimaryAttributes();
+}
+
+void AProjectMCharacter::InitializeFloatingStatusBar()
+{
+	// Only create once
+	if (UIFloatingStatusBar || !IsValid(AbilitySystemComponent))
+	{
+		return;
+	}
+
+	// Need a valid PlayerState
+	if (!GetPlayerState())
+	{
+		return;
+	}
+
+	// Setup UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
+	AProjectMPlayerController* PC = Cast<AProjectMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PC && PC->IsLocalPlayerController())
+	{
+		if (UIFloatingStatusBarClass)
+		{
+			UIFloatingStatusBar = CreateWidget<UProjectMFloatingStatusBarWidget>(PC, UIFloatingStatusBarClass);
+			if (UIFloatingStatusBar && UIFloatingStatusBarComponent)
+			{
+				UIFloatingStatusBarComponent->SetWidget(UIFloatingStatusBar);
+
+				UProjectMAttributeSet* AttributeSetBase = Cast<UProjectMAttributeSet>(AttributeSet);
+
+				const FText CharacterName = FText::FromString("Ephyr");
+				// Setup the floating status bar
+				UIFloatingStatusBar->SetHealthPercentage(AttributeSetBase->GetHealth() / AttributeSetBase->GetMaxHealth());
+				UIFloatingStatusBar->SetManaPercentage(AttributeSetBase->GetMana() / AttributeSetBase->GetMaxMana());
+				UIFloatingStatusBar->OwningCharacter = this;
+				UIFloatingStatusBar->SetCharacterName(CharacterName);
+				UIFloatingStatusBar->OnWidgetSet();
+			}
+		}
+	}
+
 }

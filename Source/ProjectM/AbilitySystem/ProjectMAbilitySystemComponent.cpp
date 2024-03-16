@@ -12,7 +12,7 @@ void UProjectMAbilitySystemComponent::EffectApplied(UAbilitySystemComponent* Abi
                                                     const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle ActiveHandle)
 {
 	FGameplayTagContainer AssetTags;
-	EffectSpec.GetAllAssetTags(AssetTags);\
+	EffectSpec.GetAllAssetTags(AssetTags);
 
 	OnEffectAssetTags.Broadcast(AssetTags);
 

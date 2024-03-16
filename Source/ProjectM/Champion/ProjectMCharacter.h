@@ -30,10 +30,21 @@ public:
 
 	virtual int32 GetPlayerLevel() override;
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<class UUserWidget> HealthBarWidgetClass;
-
 	void BeginPlay() override;
+
+	UPROPERTY()
+	class UProjectMFloatingStatusBarWidget* UIFloatingStatusBar;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
+	TSubclassOf<class UProjectMFloatingStatusBarWidget> UIFloatingStatusBarClass;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "UI")
+	class UWidgetComponent* UIFloatingStatusBarComponent;
+	
+	// Creates and initializes the floating status bar for heroes.
+	// Safe to call many times because it checks to make sure it only executes once.
+	UFUNCTION()
+	void InitializeFloatingStatusBar();
 private:
 	/** Top down camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -42,10 +53,6 @@ private:
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
-
-	/* Healthbar Widget */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	UWidgetComponent* HealthBarWidgetComponent;
 
 	void InitAbilityActorInfo();
 };

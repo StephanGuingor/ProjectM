@@ -119,19 +119,19 @@ void AProjectMPlayerController::OnInputStarted()
 	}
 
 	// If we hit a surface, cache the location
-	if (bHitSuccessful)
-	{
-		CachedDestination = Hit.Location;
-		
-		if (ClickParticle != nullptr && ClickParticle->IsActive())
-		{
-			ClickParticle->DestroyInstance();
-			ClickParticle = nullptr;
-		}
-		ClickParticle = UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination,
-		                                                               FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f),
-		                                                               true, true, ENCPoolMethod::None, true);
-	}
+	// if (bHitSuccessful)
+	// {
+	// 	CachedDestination = Hit.Location;
+	// 	
+	// 	if (ClickParticle != nullptr && IsValid(ClickParticle))
+	// 	{
+	// 		ClickParticle->DestroyInstance();
+	// 		ClickParticle = nullptr;
+	// 	}
+	// 	ClickParticle = UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination,
+	// 	                                                               FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f),
+	// 	                                                               true, true, ENCPoolMethod::None, true);
+	// }
 	
 	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
 }
