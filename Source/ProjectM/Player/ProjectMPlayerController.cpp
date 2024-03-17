@@ -4,6 +4,7 @@
 
 #include <functional>
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "GameFramework/Pawn.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NiagaraSystem.h"
@@ -14,20 +15,31 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
+#include "NavigationPath.h"
+#include "NavigationSystem.h"
+#include "Components/SplineComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Math/Vector.h"
+#include "ProjectM/AbilitySystem/ProjectMAbilitySystemComponent.h"
 #include "ProjectM/Input/ProjectMInputComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AProjectMPlayerController::AProjectMPlayerController()
 {
+	static ConstructorHelpers::FObjectFinder<UProjectMInputConfig> InputConfigAsset(TEXT("/Game/Input/DA_TEST.DA_TEST"));
+	InputConfig = InputConfigAsset.Object;
+	
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
 	CachedDestination = FVector::ZeroVector;
 	FollowTime = 0.f;
+	ShortPressThreshold = 0.5f;
+	AutoRunAcceptanceRadius = 110.f;
+
+	Spline = CreateDefaultSubobject<USplineComponent>("Spline");
 }
 
 void AProjectMPlayerController::BeginPlay()
@@ -42,6 +54,16 @@ void AProjectMPlayerController::BeginPlay()
 	}
 }
 
+UProjectMAbilitySystemComponent* AProjectMPlayerController::GetAbilitySystemComponent()
+{
+	if (ProjectMAbilitySystemComponent == nullptr)
+	{
+		ProjectMAbilitySystemComponent = Cast<UProjectMAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetPawn<APawn>()));
+	}
+
+	return ProjectMAbilitySystemComponent;
+}
+
 void AProjectMPlayerController::SetupInputComponent()
 {
 	// set up gameplay key bindings
@@ -52,17 +74,6 @@ void AProjectMPlayerController::SetupInputComponent()
 	{
 		check(InputConfig);
 		EnhancedInputComponent->BindAbilityActions(InputConfig, this, &AProjectMPlayerController::AbilityInputTagPressed, &AProjectMPlayerController::AbilityInputTagReleased, &AProjectMPlayerController::AbilityInputTagHeld);
-		// Setup mouse input events
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &AProjectMPlayerController::OnInputStarted);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &AProjectMPlayerController::OnSetDestinationTriggered);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &AProjectMPlayerController::OnSetDestinationReleased);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &AProjectMPlayerController::OnSetDestinationReleased);
-
-		// Setup touch input events
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Started, this, &AProjectMPlayerController::OnInputStarted);
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Triggered, this, &AProjectMPlayerController::OnTouchTriggered);
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &AProjectMPlayerController::OnTouchReleased);
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &AProjectMPlayerController::OnTouchReleased);
 	}
 	else
 	{
@@ -73,166 +84,169 @@ void AProjectMPlayerController::SetupInputComponent()
 void AProjectMPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+}
 
-	APawn* ControlledPawn = GetPawn();
+void AProjectMPlayerController::PlayerTick(float DeltaTime)
+{
+	Super::PlayerTick(DeltaTime);
 
-	if (ControlledPawn == nullptr)
+	CursorTrace();
+
+	if (bAutoRunning)
 	{
-		return;
+		AutoRun();
 	}
 	
-	if (UE::Geometry::Distance(ControlledPawn->GetActorLocation(), CachedDestination) >= 110)
+}
+
+void AProjectMPlayerController::AutoRun()
+{
+	if (APawn* ControlledPawn = GetPawn())
 	{
-		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal() * 300;
-		
-		FVector CurrentDirection = ControlledPawn->GetActorForwardVector().GetSafeNormal();
-		FVector CachedDestinationNormal = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
+		const FVector LocationOnSpline = Spline->FindLocationClosestToWorldLocation(ControlledPawn->GetActorLocation(), ESplineCoordinateSpace::World);
+		const FVector Direction = Spline->FindDirectionClosestToWorldLocation(LocationOnSpline, ESplineCoordinateSpace::World);
+		ControlledPawn->AddMovementInput(Direction);
 
-		float angle = FVector::DotProduct(CurrentDirection, CachedDestinationNormal);
-
-		ACharacter* character = GetCharacter();
-		UCharacterMovementComponent* characterMovement = character->GetCharacterMovement();
-		
-		if (angle > 0.5)
+		const float DistanceToDestination = (LocationOnSpline - CachedDestination).Length();
+		if (DistanceToDestination <= AutoRunAcceptanceRadius)
 		{
-			characterMovement->RotationRate = FRotator(0.f, 600.f, 0.f);
+			bAutoRunning = false;
 		}
-		else
-		{
-			characterMovement->RotationRate = FRotator(0.f, 1500.f, 0.f);
-		}
-		
-		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
 	}
 }
 
-void AProjectMPlayerController::OnInputStarted()
-{
-	StopMovement();
-	// We look for the location in the world where the player has pressed the input
-	FHitResult Hit;
-	bool bHitSuccessful = false;
-	if (bIsTouch)
-	{
-		bHitSuccessful = GetHitResultUnderFinger(ETouchIndex::Touch1, ECollisionChannel::ECC_Visibility, true, Hit);
-	}
-	else
-	{
-		bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
-	}
 
-	// If we hit a surface, cache the location
-	// if (bHitSuccessful)
-	// {
-	// 	CachedDestination = Hit.Location;
-	// 	
-	// 	if (ClickParticle != nullptr && IsValid(ClickParticle))
-	// 	{
-	// 		ClickParticle->DestroyInstance();
-	// 		ClickParticle = nullptr;
-	// 	}
-	// 	ClickParticle = UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination,
-	// 	                                                               FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f),
-	// 	                                                               true, true, ENCPoolMethod::None, true);
-	// }
+void AProjectMPlayerController::CursorTrace()
+{
+	FHitResult CursorHit;
+	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
+	if (!CursorHit.bBlockingHit) return;
+
+	Cast<IHighlightable>(CursorHit.GetActor());
+
+	LastActor = ThisActor;
+	ThisActor = Cast<IHighlightable>(CursorHit.GetActor());
+
+	/**
+	 * Line trace from cursor. There are serveral scenarios:
+	 * A. LastActor is null and ThisActor is null
+	 *	- Do nothing
+	 * B. LastActor is null and ThisActor is not null
+	 *	- Highlight ThisActor
+	 *	C. LastActor is not null and ThisActor is null
+	 *	- Unhighlight LastActor
+	 *	D. LastActor is not null and ThisActor is not null, LastActor != ThisActor
+	 *	- Unhighlight LastActor
+	 *	- Highlight ThisActor
+	 *	E. LastActor is not null and ThisActor is not null, LastActor == ThisActor
+	 *	- Do nothing
+	 */
 	
-	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-}
-
-
-
-
-// Triggered every frame when the input is held down
-void AProjectMPlayerController::OnSetDestinationTriggered()
-{
-	// We flag that the input is being pressed
-	FollowTime += GetWorld()->GetDeltaSeconds();
-	
-	// We look for the location in the world where the player has pressed the input
-	FHitResult Hit;
-	bool bHitSuccessful = false;
-	if (bIsTouch)
+	if (LastActor == nullptr && ThisActor != nullptr)
 	{
-		bHitSuccessful = GetHitResultUnderFinger(ETouchIndex::Touch1, ECollisionChannel::ECC_Visibility, true, Hit);
+		ThisActor->HighlightActor();
 	}
-	else
+	else if (LastActor != nullptr && ThisActor == nullptr)
 	{
-		bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
+		LastActor->UnhighlightActor();
 	}
-
-	// If we hit a surface, cache the location
-	if (bHitSuccessful)
+	else if (LastActor != nullptr && ThisActor != nullptr && LastActor != ThisActor)
 	{
-		CachedDestination = Hit.Location;
+		LastActor->UnhighlightActor();
+		ThisActor->HighlightActor();
 	}
-	
-	// Move towards mouse pointer or touch
-	APawn* ControlledPawn = GetPawn();
-	if (ControlledPawn != nullptr)
-	{
-		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
-		// ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
-		// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-	}
-}
-
-void AProjectMPlayerController::OnSetDestinationReleased()
-{
-	// // If it was a short press
-	// if (FollowTime <= ShortPressThreshold)
-	// {
-	// 	// We move there and spawn some particles
-	// 	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-	// 	
-	// }
-	//
-	// FollowTime =
-
-	FHitResult Hit;
-	bool bHitSuccessful = false;
-	if (bIsTouch)
-	{
-		bHitSuccessful = GetHitResultUnderFinger(ETouchIndex::Touch1, ECollisionChannel::ECC_Visibility, true, Hit);
-	}
-	else
-	{
-		bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
-	}
-	
-	// If we hit a surface, cache the location
-	if (bHitSuccessful)
-	{
-		CachedDestination = Hit.Location;
-	}
-	//
-	// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-}
-
-// Triggered every frame when the input is held down
-void AProjectMPlayerController::OnTouchTriggered()
-{
-	bIsTouch = true;
-	OnSetDestinationTriggered();
-}
-
-void AProjectMPlayerController::OnTouchReleased()
-{
-	bIsTouch = false;
-	OnSetDestinationReleased();
 }
 
 void AProjectMPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AbilityInputTagPressed: %s"), *InputTag.ToString()));
+	if (!InputTag.MatchesTagExact(FGameplayTag::RequestGameplayTag("Input.RMB")))
+	{
+		if (GetAbilitySystemComponent())
+		{
+			GetAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+		}
+		return;
+	}
+	
+	if (GetAbilitySystemComponent() == nullptr)
+	{
+		return;
+	}
+
+	bTargeting = ThisActor ? true : false;
+	bAutoRunning = false;
+
+	if (bTargeting)
+	{
+		if (GetAbilitySystemComponent())
+		{
+			GetAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+		}
+	}
 }
 
 void AProjectMPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AbilityInputTagPressed: %s"), *InputTag.ToString()));
-
+	
 }
 
 void AProjectMPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AbilityInputTagPressed: %s"), *InputTag.ToString()));
+	if (!InputTag.MatchesTagExact(FGameplayTag::RequestGameplayTag("Input.RMB")))
+	{
+		if (GetAbilitySystemComponent())
+		{
+			GetAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+		}
+		return;
+	}
+	
+	if (GetAbilitySystemComponent() == nullptr)
+	{
+		return;
+	}
+
+	bTargeting = ThisActor ? true : false;
+	bAutoRunning = false;
+
+	if (bTargeting)
+	{
+		
+		if (GetAbilitySystemComponent())
+		{
+			GetAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+		}
+		
+		return;
+	}
+
+	FindPathWithNavMesh();
+	
+}
+
+void AProjectMPlayerController::FindPathWithNavMesh()
+{
+	FHitResult Hit;
+	if(GetHitResultUnderCursor(ECC_Visibility, false, Hit))
+	{
+		CachedDestination = Hit.Location;
+		
+		APawn* ControlledPawn = GetPawn();
+		if (FollowTime <= ShortPressThreshold && ControlledPawn)
+		{
+			if(UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, ControlledPawn->GetActorLocation(), CachedDestination))
+			{
+				Spline->ClearSplinePoints();
+				for (const FVector& Point : NavPath->PathPoints)
+				{
+					Spline->AddSplinePoint(Point, ESplineCoordinateSpace::World);
+					DrawDebugSphere(GetWorld(), Point, 8, 8, FColor::Green, false, 2.f);
+				}
+				CachedDestination = NavPath->PathPoints.Last();
+				bAutoRunning = true;
+			}
+		}
+		FollowTime = 0.f;
+		bTargeting = false;
+	}
 }
