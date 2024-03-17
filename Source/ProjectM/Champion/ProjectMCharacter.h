@@ -8,10 +8,11 @@
 #include "GameFramework/Character.h"
 
 #include "ProjectM/Champion/ProjectMCharacterBase.h"
+#include "ProjectM/Interaction/Highlightable.h"
 #include "ProjectMCharacter.generated.h"
 
 UCLASS(Blueprintable)
-class AProjectMCharacter : public AProjectMCharacterBase
+class AProjectMCharacter : public AProjectMCharacterBase, public IHighlightable
 {
 	GENERATED_BODY()
 
@@ -29,6 +30,13 @@ public:
 	virtual void OnRep_PlayerState() override;
 
 	virtual int32 GetPlayerLevel() override;
+
+	virtual void HighlightActor() override;
+	virtual void UnhighlightActor() override;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsHighlighted = false;
+	
 protected:
 	void BeginPlay() override;
 

@@ -98,6 +98,19 @@ int32 AProjectMCharacter::GetPlayerLevel()
 	return APlayerState->GetPlayerLevel();
 }
 
+void AProjectMCharacter::HighlightActor()
+{
+	GetMesh()->SetRenderCustomDepth(true);
+	GetMesh()->SetCustomDepthStencilValue(3);
+	bIsHighlighted = true;
+}
+
+void AProjectMCharacter::UnhighlightActor()
+{
+	GetMesh()->SetRenderCustomDepth(false);
+	bIsHighlighted = false;
+}
+
 void AProjectMCharacter::BeginPlay()
 {
 	Super::BeginPlay();

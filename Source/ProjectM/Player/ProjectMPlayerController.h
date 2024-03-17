@@ -16,6 +16,9 @@ class UNiagaraSystem;
 class UInputMappingContext;
 class UInputAction;
 class UProjectMInputConfig;
+class UProjectMAbilitySystemComponent;
+class USplineComponent;
+class IHighlightable;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -28,6 +31,7 @@ public:
 	AProjectMPlayerController();
 
 	virtual void Tick(float DeltaSeconds) override;
+	virtual void PlayerTick(float DeltaTime) override;
 
 	/** Time Threshold to know if it was a short press */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
@@ -51,6 +55,11 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UProjectMInputConfig* InputConfig;
+
+	UPROPERTY()
+	TObjectPtr<UProjectMAbilitySystemComponent> ProjectMAbilitySystemComponent;
+
+	UProjectMAbilitySystemComponent* GetAbilitySystemComponent();
 
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
@@ -78,9 +87,22 @@ private:
 
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	void AbilityInputTagReleased(FGameplayTag InputTag);
+	void FindPathWithNavMesh();
 	void AbilityInputTagHeld(FGameplayTag InputTag);
-	
-	
+
+	bool bAutoRunning = false;
+	UPROPERTY(EditDefaultsOnly)
+	float AutoRunAcceptanceRadius;
+	bool bTargeting = false;
+
+	void AutoRun();
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USplineComponent>Spline;
+
+	void CursorTrace();
+	IHighlightable* ThisActor;
+	IHighlightable* LastActor;
 };
 
 
