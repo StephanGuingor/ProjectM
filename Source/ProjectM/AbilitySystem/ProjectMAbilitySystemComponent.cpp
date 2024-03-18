@@ -7,7 +7,7 @@
 
 void UProjectMAbilitySystemComponent::AbilityActorInfoSet()
 {
-	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UProjectMAbilitySystemComponent::EffectApplied);
+	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UProjectMAbilitySystemComponent::ClientEffectApplied);
 }
 
 void UProjectMAbilitySystemComponent::AddCharacterAbilities(
@@ -54,7 +54,7 @@ void UProjectMAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag
 	}
 }
 
-void UProjectMAbilitySystemComponent::EffectApplied(UAbilitySystemComponent* AbilitySystemComponent,
+void UProjectMAbilitySystemComponent::ClientEffectApplied_Implementation(UAbilitySystemComponent* AbilitySystemComponent,
                                                     const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle ActiveHandle)
 {
 	FGameplayTagContainer AssetTags;

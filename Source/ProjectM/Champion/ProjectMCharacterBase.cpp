@@ -15,6 +15,11 @@ void AProjectMCharacterBase::BeginPlay()
 	Super::BeginPlay();
 }
 
+FVector AProjectMCharacterBase::GetCombatSocketLocation()
+{
+	return GetActorLocation();
+}
+
 void AProjectMCharacterBase::InitializePrimaryAttributes() const
 {
 	check(IsValid(GetAbilitySystemComponent()));

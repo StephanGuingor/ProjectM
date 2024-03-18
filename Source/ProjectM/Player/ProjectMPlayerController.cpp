@@ -117,7 +117,6 @@ void AProjectMPlayerController::AutoRun()
 
 void AProjectMPlayerController::CursorTrace()
 {
-	FHitResult CursorHit;
 	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
 	if (!CursorHit.bBlockingHit) return;
 
@@ -162,7 +161,7 @@ void AProjectMPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 	{
 		if (GetAbilitySystemComponent())
 		{
-			GetAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+			GetAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
 		}
 		return;
 	}
@@ -179,7 +178,7 @@ void AProjectMPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 	{
 		if (GetAbilitySystemComponent())
 		{
-			GetAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+			GetAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
 		}
 	}
 }
@@ -195,7 +194,7 @@ void AProjectMPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 	{
 		if (GetAbilitySystemComponent())
 		{
-			GetAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+			GetAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
 		}
 		return;
 	}
@@ -213,7 +212,7 @@ void AProjectMPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		
 		if (GetAbilitySystemComponent())
 		{
-			GetAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
+			GetAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
 		}
 		
 		return;
@@ -225,10 +224,10 @@ void AProjectMPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 
 void AProjectMPlayerController::FindPathWithNavMesh()
 {
-	FHitResult Hit;
-	if(GetHitResultUnderCursor(ECC_Visibility, false, Hit))
+	
+	if(CursorHit.bBlockingHit)
 	{
-		CachedDestination = Hit.Location;
+		CachedDestination = CursorHit.Location;
 		
 		APawn* ControlledPawn = GetPawn();
 		if (FollowTime <= ShortPressThreshold && ControlledPawn)
@@ -240,6 +239,10 @@ void AProjectMPlayerController::FindPathWithNavMesh()
 				{
 					Spline->AddSplinePoint(Point, ESplineCoordinateSpace::World);
 					DrawDebugSphere(GetWorld(), Point, 8, 8, FColor::Green, false, 2.f);
+				}
+				if (NavPath->PathPoints.Num() == 0)
+				{
+					return;
 				}
 				CachedDestination = NavPath->PathPoints.Last();
 				bAutoRunning = true;

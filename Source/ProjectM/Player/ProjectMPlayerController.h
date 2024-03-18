@@ -100,6 +100,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USplineComponent>Spline;
 
+	FHitResult CursorHit;
 	void CursorTrace();
 	IHighlightable* ThisActor;
 	IHighlightable* LastActor;
