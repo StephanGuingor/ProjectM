@@ -238,7 +238,6 @@ void AProjectMPlayerController::FindPathWithNavMesh()
 				for (const FVector& Point : NavPath->PathPoints)
 				{
 					Spline->AddSplinePoint(Point, ESplineCoordinateSpace::World);
-					DrawDebugSphere(GetWorld(), Point, 8, 8, FColor::Green, false, 2.f);
 				}
 				if (NavPath->PathPoints.Num() == 0)
 				{

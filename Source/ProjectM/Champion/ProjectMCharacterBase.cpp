@@ -3,7 +3,16 @@
 
 #include "ProjectMCharacterBase.h"
 
+#include "Components/CapsuleComponent.h"
 #include "ProjectM/AbilitySystem/ProjectMAbilitySystemComponent.h"
+
+AProjectMCharacterBase::AProjectMCharacterBase()
+{
+	PrimaryActorTick.bCanEverTick = true;
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+}
 
 UAbilitySystemComponent* AProjectMCharacterBase::GetAbilitySystemComponent() const
 {
@@ -37,10 +46,5 @@ void AProjectMCharacterBase::AddCharacterAbilities()
 	if (!HasAuthority()) return;
 
 	AbilitySystem->AddCharacterAbilities(StartupAbilities);	
-}
-
-AProjectMCharacterBase::AProjectMCharacterBase()
-{
-	PrimaryActorTick.bCanEverTick = true;
 }
 
