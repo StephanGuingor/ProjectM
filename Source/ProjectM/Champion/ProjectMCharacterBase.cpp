@@ -4,14 +4,16 @@
 #include "ProjectMCharacterBase.h"
 
 #include "Components/CapsuleComponent.h"
+#include "ProjectM/ProjectM.h"
 #include "ProjectM/AbilitySystem/ProjectMAbilitySystemComponent.h"
 
 AProjectMCharacterBase::AProjectMCharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
+	
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
 }
 
 UAbilitySystemComponent* AProjectMCharacterBase::GetAbilitySystemComponent() const
@@ -26,7 +28,7 @@ void AProjectMCharacterBase::BeginPlay()
 
 FVector AProjectMCharacterBase::GetCombatSocketLocation()
 {
-	return GetActorLocation();
+	return GetActorLocation() + GetActorForwardVector() * 100.f;
 }
 
 void AProjectMCharacterBase::InitializePrimaryAttributes() const
