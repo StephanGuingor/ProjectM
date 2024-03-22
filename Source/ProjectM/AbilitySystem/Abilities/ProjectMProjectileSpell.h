@@ -7,6 +7,8 @@
 #include "ProjectMProjectileSpell.generated.h"
 
 class AProjectMProyectile;
+class UGameplayEffect;
+
 /**
  * 
  */
@@ -24,4 +26,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AProjectMProyectile> ProjectileClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
+	TSubclassOf<UGameplayEffect> DamageEffectClass;
 };

@@ -3,6 +3,8 @@
 
 #include "ProjectM/AbilitySystem/Abilities/ProjectMProjectileSpell.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "ProjectM/Actor/ProjectMProyectile.h"
 #include "ProjectM/Interaction/CombatInterface.h"
 
@@ -37,6 +39,12 @@ void UProjectMProjectileSpell::SpawnProjectile(const FVector& TargetLocation)
 		
 		AProjectMProyectile* Projectile = GetWorld()->SpawnActorDeferred<AProjectMProyectile>(ProjectileClass, SpawnTransform, GetOwningActorFromActorInfo(), Cast<APawn>(GetOwningActorFromActorInfo()), ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
+		const UAbilitySystemComponent* SourceAbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
+		
+		const FGameplayEffectSpecHandle SpecHandle = SourceAbilitySystemComponent->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), SourceAbilitySystemComponent->MakeEffectContext());
+		Projectile->DamageEffectSpecHandle = SpecHandle;
+		
+		
 		Projectile->FinishSpawning(SpawnTransform);
 	}
 }

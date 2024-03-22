@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
+#include "GameplayEffectTypes.h"
 #include "ProjectMProyectile.generated.h"
 
 class UNiagaraSystem;
@@ -23,6 +24,9 @@ public:
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
 
 	virtual void Destroyed() override;
+
+	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = true))
+	FGameplayEffectSpecHandle DamageEffectSpecHandle;
 
 protected:
 	// Called when the game starts or when spawned

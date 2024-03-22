@@ -3,10 +3,12 @@
 
 #include "ProjectM/Actor/ProjectMProyectile.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "NiagaraFunctionLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
+#include "AbilitySystemComponent.h"
 #include "ProjectM/ProjectM.h"
 
 
@@ -68,6 +70,13 @@ void AProjectMProyectile::OnSphereOverlap(UPrimitiveComponent* OverlappedCompone
 
 	if (HasAuthority())
 	{
+
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
+		if (TargetASC)
+		{
+			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
+		}
+		
 		Destroy();
 	}
 	else
